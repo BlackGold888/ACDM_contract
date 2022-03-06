@@ -14,12 +14,15 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const ACDMToken = await ethers.getContractFactory('ACDMToken');
+	const token = await ACDMToken.deploy();
+	console.log('ACDMToken address: ', token.address);
+  await token.deployed();
 
-  await greeter.deployed();
+  const ACDMPlatform = await ethers.getContractFactory('ACDMPlatform');
+	const acdmPlatformInstance = await ACDMPlatform.deploy(token.address,259200);
+	console.log('ACDMToken address: ', acdmPlatformInstance.address);
 
-  console.log("Greeter deployed to:", greeter.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
