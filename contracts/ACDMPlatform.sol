@@ -1,13 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-
 import "./ACDMToken.sol";
-import "hardhat/console.sol";
 
 contract ACDMPlatform {
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
     struct Offer {
         uint256 totalSupply;
         uint256 lastPrice;
@@ -28,18 +24,6 @@ contract ACDMPlatform {
         TradeRound,
         End
     }
-
-    event Register(address user, address referrer);
-    event StartSaleRound(
-        uint256 totalSupply,
-        uint256 lastPrice,
-        uint256 totalSupplyEth,
-        Status status
-    );
-    event BuyACDM(address buyer, uint256 amount);
-    event StartTradeRound(uint256 timeStart, Status status);
-    event AddOrder(address owner, uint256 amount, uint256 price);
-    event ReedemOrder(address buyer, uint256 amount);
 
     mapping(uint256 => Order) orders;
     mapping(address => address) referrers;
@@ -62,7 +46,6 @@ contract ACDMPlatform {
         require(referrers[msg.sender] == address(0), "You are registred");
 
         referrers[msg.sender] = _referrer;
-        emit Register(msg.sender, _referrer);
     }
 
     function getReferrer() public view returns (address) {
@@ -89,7 +72,6 @@ contract ACDMPlatform {
         }
         
         token.mint(address(this), offer.totalSupply);
-        emit StartSaleRound(offer.totalSupply, offer.lastPrice, 0, Status.SaleRound);
     }
 
     function buyACDM(uint256 amount) external payable {
@@ -106,7 +88,6 @@ contract ACDMPlatform {
 
         token.transfer(msg.sender, amount * decimals);
         offer.totalBuy += amount * decimals;
-        emit BuyACDM(msg.sender, amount);
     }
 
     function startTradeRound() public {
@@ -117,11 +98,9 @@ contract ACDMPlatform {
         offer.timeStart = block.timestamp;
         token.burn(address(this), offer.totalSupply - offer.totalBuy);
         offer.totalBuy = 0;
-        emit StartTradeRound(offer.timeStart, offer.status);
-
     }
 
-    function getStatusRound(uint256 _orderId) external view returns(Status) {
+    function getStatusRound() external view returns(Status) {
         return offer.status;
     }
 
@@ -132,8 +111,6 @@ contract ACDMPlatform {
         numOfOrder++;
         orders[numOfOrder] = Order(msg.sender, amount * decimals, price);
         token.transferFrom(msg.sender, address(this), amount * decimals);
-        emit AddOrder(msg.sender, amount * decimals, price);
-
     }
 
     function removeOrder(uint256 orderId) external {
@@ -166,7 +143,6 @@ contract ACDMPlatform {
         if(orders[orderId].amount == 0) {
             numOfOrder--;
         }
-        emit ReedemOrder(msg.sender, amount * decimals);
     }
 
     function _safeTransferETH(address to, uint256 value) internal returns (bool) {
